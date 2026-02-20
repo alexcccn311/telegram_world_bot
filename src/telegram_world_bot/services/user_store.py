@@ -13,7 +13,7 @@ class UserProfile:
 
 class UserStore:
     """
-    先用本地 json 文件做示例，后续你可以替换成 Redis / Postgres / Mongo 等。
+    本地轻量 user store（json）。主数据上 MySQL 时可替换掉。
     """
     def __init__(self, path: str = "data/users.json"):
         self.path = Path(path)
@@ -29,12 +29,14 @@ class UserStore:
             for k, v in raw.items():
                 self._cache[int(k)] = UserProfile(**v)
         except Exception:
-            # 文件坏了就先忽略（生产建议报警或备份）
             self._cache = {}
 
     def _save(self) -> None:
         data = {str(k): asdict(v) for k, v in self._cache.items()}
-        self.path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.path.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
     def upsert(self, profile: UserProfile) -> None:
         self._cache[profile.user_id] = profile
@@ -42,3 +44,4 @@ class UserStore:
 
     def get(self, user_id: int) -> Optional[UserProfile]:
         return self._cache.get(user_id)
+
